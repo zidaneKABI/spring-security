@@ -1,0 +1,24 @@
+version: '3.8'
+services:
+  sec-service:
+    build:
+      context: .
+      dockerfile: Dockerfile.yml
+    container_name: sec-service
+    ports:
+      - "8888:8081"
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306 
+      - MYSQL_DB=sec_service_db
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=mysql
+    
+    networks:
+      - reseau_gestion_paie
+    
+networks:
+  reseau_gestion_paie:
+    external: true
+    name: reseau_gestion_paie
+    
