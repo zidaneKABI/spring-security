@@ -1,18 +1,20 @@
 package com.zidane.secservice.controller;
 
+import java.util.Map;
 import java.util.Optional;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.method.P;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.zidane.secservice.dto.InscriptionDTO;
-import com.zidane.secservice.repository.AppRoleRepository;
-import com.zidane.secservice.repository.AppUserRepository;
 import com.zidane.secservice.sec.entities.AppRole;
 import com.zidane.secservice.sec.entities.AppUser;
+import com.zidane.secservice.service.AccountService;
+import com.zidane.secservice.service.ValidationService;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -23,49 +25,94 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class UtilisateurController {
 
-    private final AppUserRepository appUserRepository;
-    private final AppRoleRepository appRoleRepository;
+    private final AccountService accountService;
+    private final ValidationService validationService;
+    
+    
     @PostMapping("/inscription")
     public ResponseEntity<AppUser> inscription(@RequestBody InscriptionDTO appUser) {
 
-        if (appUser == null)
-            throw new RuntimeException("L'utilisateur ne peut pas etre null");
-        
+        if (appUser == null) {
+            log.warn("L'utilisateur ne peut pas etre null");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
         if (appUser.getRoleName() == null || appUser.getRoleName().equals("")) {
-            throw new RuntimeException("Le role de l'utilisateur est obligatoire");
+            log.warn("Le role de l'utilisateur est obligatoire");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        
 
-        AppRole appRole = appRoleRepository.findByRoleName( appUser.getRoleName());
+        AppRole appRole = accountService.loadRoleByRoleName(appUser.getRoleName());
         if (appRole == null) {
-            throw new RuntimeException("Le role " + appUser.getRoleName() + " n'existe pas");
+            log.warn("Le role " + appUser.getRoleName() + " n'existe pas");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        
-        
-        
-        
+
         if (appUser.getAppUser().getEmail() == null || appUser.getAppUser().getEmail().equals("")) {
 
-            throw new RuntimeException("L'email de l'utilisateur est obligatoire");
+            log.warn("L'email de l'utilisateur est obligatoire");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        
-        if(!appUser.getAppUser().getEmail().contains("@")  || !appUser.getAppUser().getEmail().contains(".")) {
-            throw new RuntimeException("L'email de l'utilisateur est invalide");
+
+        if (!appUser.getAppUser().getEmail().contains("@") || !appUser.getAppUser().getEmail().contains(".")) {
+            log.warn("L'email de l'utilisateur est invalide");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
-        
-        Optional<AppUser> userOptional = appUserRepository.findByEmail(appUser.getAppUser().getEmail());  // remplacer par la recherche effective de l'utilisateur
-        
+
+        Optional<AppUser> userOptional = accountService.loadUserByUsermail(appUser.getAppUser().getEmail()); // remplacer par la recherche effective de l'utilisateur
+
         if (userOptional.isPresent()) {
-            throw new RuntimeException("Un utilisateur avec cet email existe deja");
+            log.warn("Un utilisateur avec cet email existe deja");
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
         }
-        
+
         appUser.getAppUser().getAppRoles().add(appRole);
 
-        
-       return ResponseEntity.status(HttpStatus.CREATED).body(appUserRepository.save(appUser.getAppUser()));
+        AppUser appUser2 = accountService.AddNewUser(appUser.getAppUser());
+
+        validationService.saveValidation(appUser2);
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(appUser2);
 
     }
     
+    @PostMapping("/activation")
+    public ResponseEntity<AppUser> activation(@RequestBody Map<String, String> code) {
+
+        if (code == null || code.get("code") == null || code.get("code").equals("")) {
+            log.warn("Le code de validation est obligatoire");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        AppUser appUser = accountService.Activation(code);
+
+        if (appUser == null) {
+            log.warn("Le code de validation est invalide ou a expiré");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        return ResponseEntity.ok(appUser);
+
+    }
     
 
+    @PostMapping("/desactivation")
+    public ResponseEntity<AppUser> desactivation(@RequestBody Map<String, String> email) {
+
+        
+        if (email == null || email.get("email") == null || email.get("email").equals("")) {
+            log.warn("L'email est obligatoire");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        AppUser appUser = accountService.desactivationAppuser(email.get("email"));
+
+        if (appUser == null) {
+            log.warn("L'email est invalide");
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
+        }
+
+        return ResponseEntity.ok(appUser);
+
+    }       
+    
 }

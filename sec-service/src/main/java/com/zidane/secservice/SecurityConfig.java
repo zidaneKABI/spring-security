@@ -22,6 +22,8 @@ public class SecurityConfig {
                     .requestMatchers("addroletouser").permitAll()
                     .requestMatchers("/avis/**").permitAll()
                     .requestMatchers("/inscription").permitAll()
+                    .requestMatchers("/activation").permitAll()
+                    .requestMatchers("/desactivation").permitAll()
                     
                    .anyRequest().authenticated()).formLogin()
                 ; 
