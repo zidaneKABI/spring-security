@@ -56,16 +56,23 @@ public class ValidationService {
   }
   
   public void updateValidation(Validation validation) {
+   
+    if (validation!=null) {
     validationRepository.save(validation);
+    } 
+   
   }
   
   public void deleteValidation(AppUser appUser) {
     
     Validation validation = validationRepository.findByAppUser(appUser);
 
-    validationRepository.delete(validation);
+    if (validation!=null) 
+      {
+        validationRepository.delete(validation);
+        System.out.println("Validation record deleted for user: " + appUser.getName()); 
+     } 
    
-    System.out.println("Validation record deleted for user: " + appUser.getName()); 
   }
 
 }

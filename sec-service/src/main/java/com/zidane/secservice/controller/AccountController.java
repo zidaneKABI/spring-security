@@ -27,7 +27,7 @@ public class AccountController {
     
     @GetMapping("/users/{username}")
     public AppUser getUserById(@PathVariable String username) {
-        return accountService.loadUserByUsername(username);
+        return accountService.myloadUserByUsername(username);
     }
 
     @PostMapping(path="/roles")

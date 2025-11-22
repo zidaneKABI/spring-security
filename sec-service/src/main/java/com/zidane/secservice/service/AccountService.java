@@ -16,7 +16,7 @@ public interface AccountService {
      
     AppRole loadRoleByRoleName(String roleName);
     Optional<AppUser> loadUserByUsermail(String mail);
-    AppUser loadUserByUsername(String username);
+    AppUser myloadUserByUsername(String username);
 
     List<AppUser> listUsers();
     

@@ -1,11 +1,13 @@
 package com.zidane.secservice.service;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
+
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,13 +23,15 @@ import lombok.RequiredArgsConstructor;
 @Service
 @Transactional
 @RequiredArgsConstructor
-public class AccountServiceImplementation implements AccountService 
+public class AccountServiceImplementation implements AccountService,UserDetailsService 
 {
 
-    private      final AppUserRepository appUserRepository;
-    private      final  AppRoleRepository appRoleRepository;
-    private      final  PasswordEncoder passwordEncoder;
-    private      final ValidationService validationService;
+    private final   AppUserRepository appUserRepository;
+    private final  AppRoleRepository appRoleRepository;
+    private final  PasswordEncoder passwordEncoder;
+    private final  ValidationService validationService;
+
+   
 
    
 
@@ -38,9 +42,15 @@ public class AccountServiceImplementation implements AccountService
        return appUserRepository.save(appUser);
     }
 
+    
     @Override
     public AppRole AddNewRole(AppRole appRole) {
-                return appRoleRepository.save(appRole);
+        
+        if (appRole!=null) {
+            return appRoleRepository.save(appRole);
+        }  
+        return null;      
+     
       }
 
     @Override
@@ -53,7 +63,7 @@ public class AccountServiceImplementation implements AccountService
     }
 
     @Override
-    public AppUser loadUserByUsername(String username) 
+    public AppUser myloadUserByUsername(String username) 
     {
         return appUserRepository.findByName(username);
         
@@ -118,7 +128,22 @@ public class AccountServiceImplementation implements AccountService
             return null;
         }
     }
+
+    @Override
+    public AppUser loadUserByUsername(String email) throws UsernameNotFoundException {
+   
+         System.out.println("User name received in service: TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT " + email);
+
+        Optional<AppUser> userOptional = appUserRepository.findByEmail(email);
+        
+        if (userOptional.isPresent()) {
+            return userOptional.get();
+        } else 
+        {
+            throw new UsernameNotFoundException("User not found");
+        }
+    }
     
-    
+       
 
 }

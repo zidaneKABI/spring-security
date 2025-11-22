@@ -20,6 +20,7 @@ public class SecServiceApplication {
 		return new org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder();
 	}
 
+	/* 
 	@Bean
 	CommandLineRunner start( AccountService accountService) {
 		return args -> {
@@ -48,6 +49,6 @@ public class SecServiceApplication {
 			
 
 		};
-	}
+	  } */
 
 }
